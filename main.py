@@ -7,20 +7,14 @@ from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger, AstrBotConfig
 
-from .constants import (
-    PLUGIN_NAME,
-    PLUGIN_AUTHOR,
-    PLUGIN_DESCRIPTION,
-    PLUGIN_VERSION,
-    HTML_TEMPLATE,
-)
+from .constants import HTML_TEMPLATE
 
 
 @register(
-    PLUGIN_NAME,
-    PLUGIN_AUTHOR,
-    PLUGIN_DESCRIPTION,
-    PLUGIN_VERSION,
+    "astrbot_plugin_github_analyzer",
+    "lxfight",
+    "https://github.com/lxfight/astrabot_plugin_github_analyzer",
+    "1.0.0",
 )
 class GithubAnalyzerPlugin(Star):
     # 插件初始化函数，在插件加载时执行

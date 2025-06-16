@@ -1,22 +1,3 @@
-import yaml
-import os
-
-# 获取当前文件的目录
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-# 读取metadata.yaml文件
-with open(os.path.join(CURRENT_DIR, "metadata.yaml"), "r", encoding="utf-8") as file:
-    metadata = yaml.safe_load(file)
-
-PLUGIN_NAME = metadata.get("name", "astrabot_plugin_github_analyzer")
-PLUGIN_AUTHOR = metadata.get("author", "lxfight")
-PLUGIN_DESCRIPTION = metadata.get(
-    "description", "一个分析 GitHub 用户近期活动并计算内卷分数的插件"
-)
-PLUGIN_VERSION = metadata.get("version", "1.0.0")
-PLUGIN_REPO = metadata.get(
-    "repo", "https://github.com/lxfight/astrabot_plugin_github_analyzer"
-)
-
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="zh-CN">
