@@ -1,0 +1,5 @@
+name: astrbot_plugin_github_analyzer
+author: lxfight
+version: "1.0.0"
+repo: ""
+description: "一个分析 GitHub 用户近期活动并计算内卷分数的插件"

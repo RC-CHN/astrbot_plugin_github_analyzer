@@ -1,0 +1,26 @@
+{
+    "github_token": {
+        "description": "GitHub 个人访问令牌 (Token)",
+        "type": "string",
+        "hint": "用于访问 GitHub API，可以提高请求速率限制。建议生成一个具有 'public_repo' 权限的令牌。",
+        "obvious_hint": true
+    },
+    "work_start_hour": {
+        "description": "“工作时间”的开始小时",
+        "type": "int",
+        "default": 9,
+        "hint": "用于计算“非工作时间”活动，24小时制。"
+    },
+    "work_end_hour": {
+        "description": "“工作时间”的结束小时",
+        "type": "int",
+        "default": 18,
+        "hint": "用于计算“非工作时间”活动，24小时制。该小时的活动不算在工作时间内。"
+    },
+    "lookback_days": {
+        "description": "分析最近多少天的活动",
+        "type": "int",
+        "default": 7,
+        "hint": "分析从现在起回溯的天数范围。"
+    }
+}
