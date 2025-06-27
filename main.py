@@ -194,10 +194,13 @@ class GithubAnalyzerPlugin(Star):
         )
 
         # 生成“事件类型分布”的 HTML，现在包含更具体的类名以匹配新样式
-        event_list_html_parts = []
+        # 去掉 [:5] 的限制，显示所有事件类型
         sorted_events = sorted(
             event_type_count.items(), key=lambda item: item[1], reverse=True
-        )[:5]
+        )
+        
+        # 改回单列布局
+        event_list_html_parts = []
         for event_type, count in sorted_events:
             event_list_html_parts.append(
                 f'<div class="event-list-item">'

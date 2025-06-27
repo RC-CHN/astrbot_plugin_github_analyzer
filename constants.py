@@ -201,12 +201,6 @@ HTML_TEMPLATE = """
     <div class="main-content-wrapper">
         <div class="left-column">
             <div>
-                <div class="section-title">🔧 近期事件类型</div>
-                <div class="module-content">
-                    {{ event_list_html | safe }}
-                </div>
-            </div>
-            <div>
                 <div class="section-title">⏰ 每小时活动分布</div>
                 <div class="module-content">
                     {{ hourly_chart_html | safe }}
@@ -235,6 +229,12 @@ HTML_TEMPLATE = """
                             <td><div class="stat-item"><div class="label">周末事件</div><div class="value">{{ weekend_activity }}</div></div></td>
                         </tr>
                     </table>
+                </div>
+            </div>
+            <div>
+                <div class="section-title">🔧 近期事件类型</div>
+                <div class="module-content">
+                    {{ event_list_html | safe }}
                 </div>
             </div>
         </div>
