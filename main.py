@@ -29,27 +29,65 @@ class GithubAnalyzerPlugin(Star):
         logger.info("GitHub 分析插件已卸载，HTTP 客户端已关闭。")
 
     @filter.command("gh_analyze")
-    async def analyze_command(self, event: AstrMessageEvent, username: str):
+    async def analyze_command(
+        self, event: AstrMessageEvent, username: str, arg1: str = None, arg2: str = None
+    ):
         try:
             token = self.config.get("github_token")
             if not token:
                 yield event.plain_result("错误：未在插件配置中设置 GitHub Token。")
                 return
 
-            yield event.plain_result(f"正在分析用户 {username}，请稍候...")
+            # 根据传入参数确定日期范围
+            try:
+                if arg1 is None and arg2 is None:
+                    # Case 1: gh_analyze <user> -> 默认最近N天
+                    start_day = self.config.get("lookback_days", 7)
+                    end_day = 0
+                elif arg2 is None:
+                    # Case 2: gh_analyze <user> N -> 最近N天
+                    start_day = int(arg1)
+                    end_day = 0
+                else:
+                    # Case 3: gh_analyze <user> A B -> A天前到B天前
+                    start_day = int(arg1)
+                    end_day = int(arg2)
 
-            # 这个函数现在会返回一个可以直接用于渲染的、扁平化的字典
-            render_payload = await self._analyze_and_prepare_data(username, token)
+                if not 0 <= end_day < start_day:
+                    yield event.plain_result(
+                        "❌ 参数错误：日期范围无效。请确保起始天数大于截止天数，且均为非负数。"
+                    )
+                    return
+            except (ValueError, TypeError):
+                yield event.plain_result("❌ 参数错误：天数必须为有效的整数。")
+                return
+
+            # 更新提示信息
+            if end_day == 0:
+                yield event.plain_result(
+                    f"正在分析用户 {username} 最近 {start_day} 天的活动，请稍候..."
+                )
+            else:
+                yield event.plain_result(
+                    f"正在分析用户 {username} 从 {start_day} 天前到 {end_day} 天前的活动，请稍候..."
+                )
+
+            render_payload = await self._analyze_and_prepare_data(
+                username, token, start_day, end_day
+            )
 
             if render_payload:
-                # 直接将扁平化的字典传递给模板
                 image_url = await self.html_render(HTML_TEMPLATE, render_payload)
                 yield event.image_result(image_url)
             else:
-                lookback_days = self.config.get("lookback_days", 7)
-                yield event.plain_result(
-                    f"⚠️ 在过去的 {lookback_days} 天内没有找到用户 {username} 的公开活动。"
-                )
+                if end_day == 0:
+                    yield event.plain_result(
+                        f"⚠️ 在最近 {start_day} 天内没有找到用户 {username} 的公开活动。"
+                    )
+                else:
+                    yield event.plain_result(
+                        f"⚠️ 在 {start_day} 天前到 {end_day} 天前的范围内没有找到用户 {username} 的公开活动。"
+                    )
 
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
@@ -78,7 +116,9 @@ class GithubAnalyzerPlugin(Star):
             for event in events:
                 yield event
 
-    async def _analyze_and_prepare_data(self, username: str, token: str) -> dict:
+    async def _analyze_and_prepare_data(
+        self, username: str, token: str, start_day: int, end_day: int
+    ) -> dict:
         # 1. 获取用户基本信息和头像 (保持不变)
         user_api_url = f"https://api.github.com/users/{username}"
         headers = {"Authorization": f"token {token}"}
@@ -100,7 +140,6 @@ class GithubAnalyzerPlugin(Star):
         # 2. 分析事件逻辑 (保持不变)
         work_start_hour = self.config.get("work_start_hour", 10)
         work_end_hour = self.config.get("work_end_hour", 18)
-        lookback_days = self.config.get("lookback_days", 7)
         hourly_activity, event_type_count = defaultdict(int), defaultdict(int)
         off_hour_count, midnight_activity, weekend_activity, total_activity = 0, 0, 0, 0
         active_days = set()
@@ -119,8 +158,16 @@ class GithubAnalyzerPlugin(Star):
                 continue
 
             local_time = utc_time.astimezone(local_tz)
-            if (now - local_time).days >= lookback_days:
+            days_diff = (now - local_time).days
+
+            # 因为事件是按时间倒序的，一旦超出起始范围，后续的都会超出
+            if days_diff >= start_day:
                 break
+            # 如果事件在截止范围之内（即过于近期），则跳过
+            if days_diff < end_day:
+                continue
+
+            # 事件在指定范围内，开始统计
             active_days.add(local_time.strftime("%Y-%m-%d"))
             hourly_activity[local_time.hour] += 1
             event_type_count[event.get("type", "Unknown")] += 1
